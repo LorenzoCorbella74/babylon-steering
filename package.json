@@ -1,0 +1,31 @@
+{
+  "name": "steering-babylon",
+  "version": "0.0.1",
+  "description": "Steering behaviours library for Babylon.js",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "start":"node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LorenzoCorbella74/babylon-steering.git"
+  },
+  "keywords": [
+    "3D",
+    "Game_development",
+    "steering_behaviours",
+    "game_ai", "Babylon.js"
+  ],
+  "author": "Lorenzo Corbella",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LorenzoCorbella74/babylon-steering/issues"
+  },
+  "homepage": "https://github.com/LorenzoCorbella74/babylon-steering#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
