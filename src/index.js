@@ -1,43 +1,4 @@
-/* 
-
-actor.animate({ 
-    blend: 'priority',       // can be: 'priority' for Priority Arbitration, 'weighted' for Weighted Blending, 'probability' for 'Prioritised Dithering',
-    forces: [
-        {
-            steer : target1,          // the key is the name of the steering method
-            lookAt: 'target',         // can be 'target', 'direction'
-            priority: 1,              // if blend is set to 'priorirty' or 'probability'
-            weight: 0.1,              // if blend is set to 'weighted'
-            probability: 0.6,         // if blend is set to 'probability'
-        }
-    ]   
-})
-
-
-Oppure 
-
-actor
-  .salta(3, { weigth: 0.4, priority: 1, probability: 0.6 })
-  .corri(4, { weigth: 0.6, priority: 3, probability: 0.5 })
-  .lookAt
-  //.animate("blend");
-  //.animate("priority");
-  //.animate("probability");
-  .animate();
-
-
-*/
-
-/*
-
-
-- Fare una funzione che calcola la distanza e usarla in tutti i metodi
-- fare metodi di comportamento:  moveTo, rotateTo, randomRotate()
-
-
-
-*/
-
+import * as BABYLON from 'babylonjs';
 
 const defaultPriorities = {
     avoid: 10,
@@ -59,7 +20,7 @@ const defaultProbabilities = {
     idle: 0.66
 };
 
-class SteeringVehicle {
+export default class SteeringVehicle {
 
     constructor(mesh, engine, options = {}) {
 

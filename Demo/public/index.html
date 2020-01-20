@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Pursue, evade</title>
+    <script src="https://code.jquery.com/pep/0.4.2/pep.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="./index.umd.js"></script>
+    <link rel="stylesheet" type="text/css" href="main.css">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside>
+            <h3>Examples</h3>
+            <ul>
+                <li><a href="index.html">Seek, Flee, Avoid</a></li>
+                <li><a href="two.html">Pursue, Evade</a></li>
+                <li><a href="">Interpose, Hide</a></li>
+                <li><a href="">Follow path</a></li>
+                <li><a href="">Wander</a></li>
+                <li><a href="">Follow Leader</a></li>
+                <li><a href="">Queue</a></li>
+                <li><a href="">Flock</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main -->
+        <main style="flex: 1">
+            <canvas id="renderCanvas"></canvas>
+            <div id="info">
+                Red sphere <span style="color:red"> PURSUE</span> green box avoiding white box.
+                <br>
+                Blue sphere <span style="color:rgb(78, 78, 243);">EVADE</span> red sphere avoiding white box.
+                <br>
+                Drag <span style="color:green;">green box</span> with the mouse.
+            </div>
+        </main>
+    </div>
+
+    <script>
+
+        var canvas = document.getElementById("renderCanvas");
+        var engine = null;
+        var scene = null;
+
+    
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            var createDefaultEngine = function () {
+                return new BABYLON.Engine(canvas, true, {
+                    preserveDrawingBuffer: true,
+                    stencil: true
+                });
+            };
+
+            var createScene = function () {
+                var scene = new BABYLON.Scene(engine);
+                scene.gravity = new BABYLON.Vector3(0, -9.81, 0);
+                scene.collisionsEnabled = true;
+                scene.clearColor = new BABYLON.Color3(0, 0, 0);
+
+                var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 500, -1000), scene);
+                camera.setTarget(BABYLON.Vector3.Zero());
+
+                // Light
+                /* var light = new BABYLON.PointLight("omni", new BABYLON.Vector3(10, 100, 10), scene);
+                light.intensity = 2; */
+                var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+                light.intensity = 0.25;
+
+                // Ground
+                var ground = BABYLON.Mesh.CreateGround("ground", 5000, 5000, 1, scene, false);
+                var groundMaterial = new BABYLON.StandardMaterial("ground", scene);
+                groundMaterial.specularColor = BABYLON.Color3.Black();
+                ground.material = groundMaterial;
+                ground.checkCollisions = true;
+
+                function createActor(color, scene) {
+                    let sphere = BABYLON.Mesh.CreateSphere("sphere", 32, 20, scene);
+                    let targetBox = BABYLON.MeshBuilder.CreateBox("targetBox", {
+                        height: 10,
+                        width: 5,
+                        depth: 10,
+                        updatable: true,
+                        sideOrientation: BABYLON.Mesh.DOUBLESIDE
+                    });
+                    targetBox.parent = sphere;
+                    targetBox.position = new BABYLON.Vector3(0, 0, 10);
+                    let redMat = new BABYLON.StandardMaterial("grodefaultund", scene);
+                    redMat.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+                    redMat.specularColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+                    redMat.emissiveColor = color ? color : BABYLON.Color3.Red();
+                    sphere.color = color;
+                    sphere.material = redMat;
+                    targetBox.material = redMat;
+                    sphere.position.y = 10;
+                    sphere.position.z = Math.random() * 350;
+                    sphere.checkCollisions = true;
+                    targetBox.checkCollisions = true;
+                    sphere.isPickable = false;
+                    targetBox.isPickable = false;
+                    var disc = BABYLON.MeshBuilder.CreateDisc("disc", { radius: 160, arc: 0.33, tessellation: 12, sideOrientation: BABYLON.Mesh.DOUBLESIDE }, scene);
+                    var coneOfViewMat = new BABYLON.StandardMaterial("myMaterial", scene);
+                    coneOfViewMat.diffuseColor = new BABYLON.Color3(0, 1, 0);
+                    coneOfViewMat.alpha = 0.35;
+                    disc.parent = sphere;
+                    disc.rotation.x = Math.PI / 2;
+                    disc.rotation.y = -Math.PI / 6;
+                    disc.isPickable = false;
+                    disc.material = coneOfViewMat;
+                    return sphere;
+                }
+
+                function createElement(color, dimension = 20, scene) {
+                    var element = BABYLON.Mesh.CreateBox("element", dimension, scene);
+                    var greenMat = new BABYLON.StandardMaterial("default", scene);
+                    greenMat.diffuseColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+                    greenMat.specularColor = new BABYLON.Color3(0.4, 0.4, 0.4);
+                    greenMat.emissiveColor = color ? color : BABYLON.Color3.White();
+                    element.material = greenMat;
+                    element.position.z = Math.random() * 250;
+                    element.position.y = dimension / 2;
+                    element.checkCollisions = true;
+                    return element;
+                }
+
+                //var redSphere = createActor(BABYLON.Color3.Red(), scene);
+                //var yellowSphere = createActor(BABYLON.Color3.Yellow(), scene);
+                //var blueSphere = createActor(BABYLON.Color3.Blue(), scene);
+                let istances = [];
+                for (var index = 0; index < 10; index++) {
+                    var newInstance = createActor(BABYLON.Color3.Green(), scene);
+                    // var newInstance = greenSphere.createInstance("i" + index);
+                    istances.push(new SteeringVehicle(newInstance, engine));
+                }
+                var whiteBox = createElement(BABYLON.Color3.White(), 40, scene);
+                var greenBox = createElement(BABYLON.Color3.Green(), 20, scene);
+
+                var canvas = engine.getRenderingCanvas();
+                var startingPoint;
+                var currentMesh;
+
+                // STEERING ACTORS
+                // redSphere = new SteeringVehicle(redSphere, engine);
+                // yellowSphere = new SteeringVehicle(yellowSphere, engine);
+                // blueSphere = new SteeringVehicle(blueSphere, engine);
+                greenBox = new SteeringVehicle(greenBox, engine);
+                whiteBox = new SteeringVehicle(whiteBox, engine, {
+                    mass: 10
+                });
+
+                var getGroundPosition = function () {
+                    // Use a predicate to get position on the ground
+                    var pickinfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
+                        return mesh == ground;
+                    });
+                    if (pickinfo.hit) {
+                        return pickinfo.pickedPoint;
+                    }
+                    return null;
+                }
+
+                var onPointerDown = function (evt) {
+                    if (evt.button !== 0) {
+                        let pos = getGroundPosition(evt);
+                        pos.y = 10;
+                        greenBox.waypoints.push(pos);
+                    }
+                    // check if we are under a mesh
+                    var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
+                        return mesh !== ground;
+                    });
+                    if (pickInfo.hit) {
+                        currentMesh = pickInfo.pickedMesh;
+                        startingPoint = getGroundPosition(evt);
+
+                        if (startingPoint) { // we need to disconnect camera from canvas
+                            setTimeout(function () {
+                                camera.detachControl(canvas);
+                            }, 0);
+                        }
+                    }
+                }
+
+                var onPointerUp = function () {
+                    if (startingPoint) {
+                        camera.attachControl(canvas, true);
+                        startingPoint = null;
+                        return;
+                    }
+                }
+
+                var onPointerMove = function (evt) {
+                    if (!startingPoint) {
+                        return;
+                    }
+                    var current = getGroundPosition(evt);
+                    if (!current) {
+                        return;
+                    }
+                    var diff = current.subtract(startingPoint);
+                    currentMesh.position.addInPlace(diff);
+                    startingPoint = current;
+                }
+
+                canvas.addEventListener("pointerdown", onPointerDown, false);
+                canvas.addEventListener("pointerup", onPointerUp, false);
+                canvas.addEventListener("pointermove", onPointerMove, false);
+
+                scene.onDispose = function () {
+                    canvas.removeEventListener("pointerdown", onPointerDown);
+                    canvas.removeEventListener("pointerup", onPointerUp);
+                    canvas.removeEventListener("pointermove", onPointerMove);
+                }
+
+                scene.executeWhenReady(function () {
+                    engine.runRenderLoop(function () {
+
+                        istances.forEach(e => {
+                            //e.wander()
+                            e.followLeader(greenBox, istances)
+                                // e.flock(istances)
+                                .queue(istances)
+                                .avoid([whiteBox])
+                                .lookWhereGoing(true)
+                                .animate();
+                        });
+
+
+
+                        greenBox.animate();
+                        whiteBox.animate();
+
+                        scene.render();
+                    });
+                });
+
+                return scene;
+            };
+
+            engine = createDefaultEngine();
+            if (!engine) throw 'engine should not be null.';
+            scene = createScene();
+
+            engine.runRenderLoop(function () {
+                if (scene) {
+                    scene.render();
+                }
+            });
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+
+</html>
