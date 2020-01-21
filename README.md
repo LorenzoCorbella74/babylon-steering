@@ -5,6 +5,9 @@
 ![](https://img.shields.io/github/package-json/v/LorenzoCorbella74/babylon-steering)
 
 # Intro
+
+![IMG](Demo/screen.PNG)
+
 A steering behaviors library for [Babylon.js](https://www.babylonjs.com/) for moving entities in the x/z plane. The library was born thanks to these [tutorials](https://gamedevelopment.tutsplus.com/series/understanding-steering-behaviors--gamedev-12732) and the library [three-steer](https://github.com/erosmarcon/three-steer).
 
 The following behavious are supported:
@@ -99,7 +102,25 @@ It is possible to combine many simultaneous steering forces by passing the follo
 
 ```javascript
 
-blueSphere.animate('blend');  // 'blend' 'priority' 'probability'  'truncated' 
+scene.executeWhenReady(function () {
+        engine.runRenderLoop(function () {
+
+            blueSphere
+                .seek(greenBox, 50, { weigth: 1.7, priority: 1, probability: 0.6 })
+                .flee(redSphere, 160, { weigth: 0.5, priority: 5, probability: 0.6 })
+                .lookTarget(redSphere) // or .lookWhereGoing(true)
+                .avoid(obstacleIstances, { weigth: 1, weigth: 0.8, probability: 0.6 });
+
+            blueSphere.animate('blend');  // 'blend' 'priority' 'probability'  'truncated' 
+            
+            obstacleIstances.forEach(e => {
+                    e.animate();
+            });
+
+            scene.render();
+        });
+});
+
 
 ```
 
@@ -111,14 +132,17 @@ npm install
 # 2) run the development server serving static demo pages at localhost:4000
 npm start
 
+# only demo page for seek, flee, avoid and hide are available....
+
 ```
 
 ## Bugs
-- Uhm...let me know!
+- `wander`, `avoid` and `flock` are still work in progress!
+- Let me know!
 
 ## Built With
 
-ES6 Javascript, [microbundle](https://github.com/developit/microbundle),
+ES6 Javascript, [microbundle](https://github.com/developit/microbundle), [Babylon.js](https://www.babylonjs.com/)
 
 ## License
 
